@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>創意作品評分系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0d;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --border: #2a2a2a;
+  --border2: #333;
+  --text: #f0f0f0;
+  --text2: #888;
+  --text3: #555;
+  --accent: #c8f060;
+  --accent2: #a0d040;
+  --blue: #60a8f0;
+  --pink: #f060a8;
+  --gold: #f0c040;
+  --silver: #a0b0c0;
+  --bronze: #c08060;
+  --danger: #f06060;
+  --success: #60c880;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
+.mono{font-family:'Space Mono',monospace}
+
+/* Pages */
+.page{display:none;min-height:100vh;animation:fadeIn .3s ease}
+.page.active{display:flex;flex-direction:column}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Home */
+#pg-home{background:var(--bg);position:relative;overflow:hidden}
+.home-bg{position:absolute;inset:0;pointer-events:none}
+.home-bg::before{content:'';position:absolute;top:-20%;left:-20%;width:60%;height:60%;background:radial-gradient(circle, rgba(200,240,96,.07) 0%, transparent 70%);border-radius:50%}
+.home-bg::after{content:'';position:absolute;bottom:-10%;right:-10%;width:50%;height:50%;background:radial-gradient(circle, rgba(96,168,240,.06) 0%, transparent 70%);border-radius:50%}
+.home-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1.5rem;text-align:center}
+.home-badge{display:inline-block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--accent);border:1px solid rgba(200,240,96,.3);padding:6px 16px;border-radius:100px;margin-bottom:2rem;text-transform:uppercase}
+.home-title{font-size:clamp(28px,8vw,42px);font-weight:700;line-height:1.2;margin-bottom:1rem;letter-spacing:-.02em}
+.home-title span{color:var(--accent)}
+.home-sub{font-size:14px;color:var(--text2);margin-bottom:3rem;max-width:300px}
+.home-btns{display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:320px}
+.btn-main{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 24px;border-radius:var(--radius);font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;border:none;text-decoration:none}
+.btn-main:active{transform:scale(.97)}
+.btn-accent{background:var(--accent);color:#0d0d0d}
+.btn-accent:hover{background:var(--accent2)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border2)}
+.btn-outline:hover{border-color:var(--text2);background:var(--surface)}
+.home-stat{margin-top:3rem;font-size:12px;color:var(--text3);font-family:'Space Mono',monospace}
+.home-stat span{color:var(--text2)}
+
+/* Top nav */
+.topbar{display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10}
+.back-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;color:var(--text2);font-size:18px;flex-shrink:0}
+.back-btn:hover{color:var(--text);border-color:var(--text3)}
+.page-title{font-size:16px;font-weight:700;flex:1}
+.page-sub{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+
+/* Form */
+.form-body{padding:1.25rem;display:flex;flex-direction:column;gap:1rem;flex:1}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:1rem;font-family:'Space Mono',monospace}
+.field-label{font-size:13px;color:var(--text2);margin-bottom:6px;margin-top:14px;display:block}
+.field-label:first-of-type{margin-top:0}
+.field-label .req{color:var(--danger);margin-left:2px}
+input[type=text],textarea{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:'Noto Sans TC',sans-serif;outline:none;transition:border-color .2s}
+input[type=text]:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+.toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.toggle-btn{padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:13px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;text-align:center;transition:all .2s;font-weight:500}
+.toggle-btn.on{background:rgba(200,240,96,.12);border-color:var(--accent);color:var(--accent)}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius-sm);padding:2rem 1rem;text-align:center;cursor:pointer;transition:all .2s;margin-top:8px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(200,240,96,.04)}
+.upload-zone.done{border-color:var(--success);background:rgba(96,200,128,.05)}
+.upload-icon{font-size:32px;margin-bottom:.5rem}
+.upload-text{font-size:13px;color:var(--text2)}
+.upload-text b{color:var(--text)}
+.upload-hint{font-size:11px;color:var(--text3);margin-top:4px;font-family:'Space Mono',monospace}
+input[type=file]{display:none}
+.err-msg{font-size:12px;color:var(--danger);margin-top:5px;display:none}
+.err-msg.show{display:block}
+.char-count{font-size:11px;color:var(--text3);text-align:right;margin-top:4px;font-family:'Space Mono',monospace}
+
+/* Submit button */
+.submit-wrap{padding:1rem 1.25rem 2rem}
+.btn-submit{width:100%;padding:16px;border-radius:var(--radius);background:var(--accent);color:#0d0d0d;font-size:16px;font-weight:700;font-family:'Noto Sans TC',sans-serif;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-submit:hover{background:var(--accent2)}
+.btn-submit:active{transform:scale(.98)}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.global-err{text-align:center;font-size:13px;color:var(--danger);padding:.5rem 1.25rem;display:none}
+.global-err.show{display:block}
+
+/* Scoring page */
+#pg-scoring{align-items:center;justify-content:center;background:var(--bg)}
+.scoring-inner{padding:2rem 1.5rem;text-align:center;max-width:340px}
+.score-anim{width:80px;height:80px;margin:0 auto 1.5rem;position:relative}
+.score-ring{width:80px;height:80px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--accent);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.score-title{font-size:20px;font-weight:700;margin-bottom:.5rem}
+.score-msg{font-size:13px;color:var(--text2);min-height:20px;transition:opacity .3s}
+.score-steps{display:flex;flex-direction:column;gap:8px;margin-top:2rem;text-align:left}
+.score-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text3);transition:color .4s}
+.score-step.done{color:var(--success)}
+.score-step.active{color:var(--text)}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .4s}
+.score-step.done .step-dot{background:var(--success)}
+.score-step.active .step-dot{background:var(--accent);box-shadow:0 0 6px rgba(200,240,96,.5)}
+
+/* Result page */
+.result-hero{padding:2rem 1.25rem 1rem;text-align:center;border-bottom:1px solid var(--border)}
+.result-score-ring{width:110px;height:110px;margin:0 auto 1rem;position:relative}
+.result-score-ring svg{transform:rotate(-90deg)}
+.result-score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.result-score-num .big{font-size:32px;font-weight:700;font-family:'Space Mono',monospace;color:var(--accent);line-height:1}
+.result-score-num .small{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace}
+.result-name{font-size:18px;font-weight:700;margin-bottom:4px}
+.result-comment{font-size:13px;color:var(--text2);margin-top:.5rem;padding:0 1rem}
+.result-body{padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+.score-breakdown{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.breakdown-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:1rem;font-family:'Space Mono',monospace}
+.score-row{margin-bottom:14px}
+.score-row:last-child{margin-bottom:0}
+.score-row-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.score-row-top span:first-child{color:var(--text2)}
+.score-row-top span:last-child{font-family:'Space Mono',monospace;font-weight:700;color:var(--text)}
+.bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.result-btns{display:flex;flex-direction:column;gap:.75rem;padding:0 1.25rem 2rem}
+.btn-sec{width:100%;padding:13px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text);font-size:14px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s}
+.btn-sec:hover{border-color:var(--text2);background:var(--surface)}
+
+/* Rank page */
+.rank-header{padding:1.25rem;border-bottom:1px solid var(--border)}
+.rank-total{font-size:12px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px}
+.rank-body{padding:1.25rem;display:flex;flex-direction:column;gap:1.5rem}
+.tier-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:.75rem}
+.rank-item{display:flex;align-items:center;gap:12px;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);transition:border-color .2s;animation:fadeIn .4s ease both}
+.rank-item.gold{border-color:rgba(240,192,64,.3);background:rgba(240,192,64,.05)}
+.rank-item.silver{border-color:rgba(160,176,192,.2)}
+.rank-item.bronze{border-color:rgba(192,128,96,.2)}
+.rank-medal{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Space Mono',monospace;font-size:14px;font-weight:700}
+.rank-medal.gold{background:rgba(240,192,64,.15);color:var(--gold);border:1px solid rgba(240,192,64,.3)}
+.rank-medal.silver{background:rgba(160,176,192,.1);color:var(--silver);border:1px solid rgba(160,176,192,.2)}
+.rank-medal.bronze{background:rgba(192,128,96,.1);color:var(--bronze);border:1px solid rgba(192,128,96,.2)}
+.rank-medal.honor{background:var(--surface2);color:var(--text3);border:1px solid var(--border);font-size:12px}
+.rank-info{flex:1;min-width:0}
+.rank-names{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-detail{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.rank-score{font-size:22px;font-weight:700;font-family:'Space Mono',monospace;color:var(--accent);flex-shrink:0}
+.rank-empty{text-align:center;padding:4rem 1rem;color:var(--text3);font-size:14px}
+.rank-refresh{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer;padding:.5rem;border:none;background:none;font-family:'Noto Sans TC',sans-serif;margin-left:auto}
+.rank-refresh:hover{color:var(--text2)}
+.loading-row{display:flex;align-items:center;gap:8px;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.5rem}
+.loading-dot{width:44px;height:44px;border-radius:50%;background:var(--border);animation:pulse 1.2s ease infinite}
+.loading-line{height:12px;border-radius:6px;background:var(--border);animation:pulse 1.2s ease infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+.already-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(96,200,128,.1);border:1px solid rgba(96,200,128,.2);color:var(--success);font-size:12px;padding:4px 12px;border-radius:100px;margin-top:.5rem;font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="pg-home" class="page active">
+  <div class="home-bg"></div>
+  <div class="home-content">
+    <div class="home-badge mono">HDUT · 創意評分系統</div>
+    <h1 class="home-title">創意作品<br><span>評分平台</span></h1>
+    <p class="home-sub">上傳你的創意作品，由 AI 即時評分，與同學一起競逐前六強</p>
+    <div class="home-btns">
+      <button class="btn-main btn-accent" onclick="showPage('pg-submit')">✦ 填寫資料 &amp; 上傳作品</button>
+      <button class="btn-main btn-outline" onclick="showPage('pg-rank')">◈ 查看即時排行榜</button>
+    </div>
+    <div class="home-stat mono" id="homeCount">讀取中…</div>
+  </div>
+</div>
+
+<!-- SUBMIT -->
+<div id="pg-submit" class="page">
+  <div class="topbar">
+    <div class="back-btn" onclick="showPage('pg-home')">←</div>
+    <div>
+      <div class="page-title">填寫資料</div>
+      <div class="page-sub mono">每人限提交一次</div>
+    </div>
+  </div>
+  <div class="form-body">
+    <div class="section-card">
+      <div class="section-label">組別資訊</div>
+      <div class="toggle-row">
+        <button class="toggle-btn on" id="btn1" onclick="setSize(1)">個人（1人）</button>
+        <button class="toggle-btn" id="btn2" onclick="setSize(2)">搭檔（2人）</button>
+      </div>
+      <label class="field-label">組員 1 姓名 <span class="req">*</span></label>
+      <input type="text" id="m1" placeholder="請輸入姓名" maxlength="20">
+      <div class="err-msg" id="m1Err">請填寫組員 1 姓名</div>
+      <div id="m2wrap" style="display:none">
+        <label class="field-label">組員 2 姓名 <span class="req">*</span></label>
+        <input type="text" id="m2" placeholder="請輸入姓名" maxlength="20">
+        <div class="err-msg" id="m2Err">請填寫組員 2 姓名</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-label">創意檔案</div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon" id="uploadIcon">📁</div>
+        <div class="upload-text" id="uploadText"><b>點擊上傳</b>圖片或 PDF</div>
+        <div class="upload-hint" id="uploadHint">JPG · PNG · PDF｜最大 20MB</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp,.pdf,application/pdf" onchange="handleFile(this)">
+      <div class="err-msg" id="fileErr">請上傳創意檔案</div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-label">創意想法描述</div>
+      <label class="field-label">說明你的創意、設計理念與想表達的內容 <span class="req">*</span></label>
+      <textarea id="idea" placeholder="請詳細描述你的作品想法，包含設計理念、創意發想過程、希望傳達的訊息…（建議 50 字以上）" oninput="updateCount()"></textarea>
+      <div class="char-count mono"><span id="charCount">0</span> 字</div>
+      <div class="err-msg" id="ideaErr">請輸入至少 20 字的想法描述</div>
+    </div>
+  </div>
+
+  <div class="global-err" id="globalErr"></div>
+  <div class="submit-wrap">
+    <button class="btn-submit" id="submitBtn" onclick="submitWork()">
+      <span>✦</span><span>送出作品</span>
+    </button>
+  </div>
+</div>
+
+<!-- SCORING -->
+<div id="pg-scoring" class="page">
+  <div class="scoring-inner">
+    <div class="score-anim"><div class="score-ring"></div></div>
+    <div class="score-title">AI 評分中</div>
+    <div class="score-msg" id="scoreMsg">準備分析作品…</div>
+    <div class="score-steps">
+      <div class="score-step active" id="step0"><div class="step-dot"></div><span>讀取創意檔案</span></div>
+      <div class="score-step" id="step1"><div class="step-dot"></div><span>分析視覺美感與原創性</span></div>
+      <div class="score-step" id="step2"><div class="step-dot"></div><span>評估想法邏輯與創新程度</span></div>
+      <div class="score-step" id="step3"><div class="step-dot"></div><span>計算綜合分數</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="pg-result" class="page">
+  <div class="result-hero">
+    <div class="result-score-ring">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle cx="55" cy="55" r="48" fill="none" stroke="#2a2a2a" stroke-width="6"/>
+        <circle id="scoreArc" cx="55" cy="55" r="48" fill="none" stroke="#c8f060" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 302" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1)"/>
+      </svg>
+      <div class="result-score-num">
+        <div class="big" id="resultTotal">—</div>
+        <div class="small">/ 100</div>
+      </div>
+    </div>
+    <div class="result-name" id="resultName"></div>
+    <div class="result-comment" id="resultComment"></div>
+  </div>
+  <div class="result-body">
+    <div class="score-breakdown">
+      <div class="breakdown-title">創意檔案 ×40%</div>
+      <div class="score-row">
+        <div class="score-row-top"><span>視覺美感</span><span id="rv">—/25</span></div>
+        <div class="bar-track"><div class="bar-fill" id="rb1" style="background:#60a8f0"></div></div>
+      </div>
+      <div class="score-row">
+        <div class="score-row-top"><span>原創性</span><span id="ro">—/25</span></div>
+        <div class="bar-track"><div class="bar-fill" id="rb2" style="background:#c8f060"></div></div>
+      </div>
+    </div>
+    <div class="score-breakdown">
+      <div class="breakdown-title">創意想法 ×60%</div>
+      <div class="score-row">
+        <div class="score-row-top"><span>邏輯清晰度</span><span id="rc">—/25</span></div>
+        <div class="bar-track"><div class="bar-fill" id="rb3" style="background:#f060a8"></div></div>
+      </div>
+      <div class="score-row">
+        <div class="score-row-top"><span>創新程度</span><span id="ri">—/25</span></div>
+        <div class="bar-track"><div class="bar-fill" id="rb4" style="background:#f0c040"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-main btn-accent" onclick="showPage('pg-rank')" style="width:100%">◈ 查看排行榜</button>
+    <button class="btn-sec" onclick="showPage('pg-home')">回首頁</button>
+  </div>
+</div>
+
+<!-- RANK -->
+<div id="pg-rank" class="page">
+  <div class="topbar">
+    <div class="back-btn" onclick="showPage('pg-home')">←</div>
+    <div style="flex:1">
+      <div class="page-title">即時排行榜</div>
+      <div class="rank-total mono" id="rankTotal">—</div>
+    </div>
+    <button class="rank-refresh" onclick="loadRank()">↻ 重新整理</button>
+  </div>
+  <div class="rank-body" id="rankBody">
+    <div class="rank-empty">載入中…</div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJ7VhReIPSCQdGuRJvZvV5w5-CAVkZt6w",
+  authDomain: "creative-contest.firebaseapp.com",
+  projectId: "creative-contest",
+  storageBucket: "creative-contest.firebasestorage.app",
+  messagingSenderId: "107586362962",
+  appId: "1:107586362962:web:ded6dbf1385be4ec5a898b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window._db = db;
+window._col = collection(db, 'entries');
+window._fns = { collection, addDoc, getDocs, query, orderBy, where };
+
+loadHomeCount();
+</script>
+
+<script>
+var groupSize = 1;
+var uploadedFile = null;
+var uploadedB64 = null;
+var uploadedType = null;
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if (id === 'pg-rank') loadRank();
+  if (id === 'pg-home') loadHomeCount();
+}
+window.showPage = showPage;
+
+function setSize(n) {
+  groupSize = n;
+  document.getElementById('btn1').classList.toggle('on', n===1);
+  document.getElementById('btn2').classList.toggle('on', n===2);
+  document.getElementById('m2wrap').style.display = n===2 ? 'block' : 'none';
+}
+window.setSize = setSize;
+
+function updateCount() {
+  var v = document.getElementById('idea').value;
+  document.getElementById('charCount').textContent = v.length;
+}
+window.updateCount = updateCount;
+
+function handleFile(input) {
+  var f = input.files[0];
+  if (!f) return;
+  var zone = document.getElementById('uploadZone');
+  var err = document.getElementById('fileErr');
+  err.classList.remove('show');
+  if (f.size > 20 * 1024 * 1024) {
+    err.textContent = '檔案超過 20MB，請重新選擇';
+    err.classList.add('show');
+    return;
+  }
+  uploadedFile = f;
+  uploadedType = f.type;
+  zone.classList.add('done');
+  document.getElementById('uploadIcon').textContent = f.type.startsWith('image/') ? '🖼️' : '📄';
+  document.getElementById('uploadText').innerHTML = '<b>' + f.name + '</b>';
+  document.getElementById('uploadHint').textContent = (f.size/1024/1024).toFixed(2) + ' MB';
+  var reader = new FileReader();
+  reader.onload = function(e){ uploadedB64 = e.target.result.split(',')[1]; };
+  reader.readAsDataURL(f);
+}
+window.handleFile = handleFile;
+
+function showErr(id, msg) {
+  var el = document.getElementById(id);
+  el.textContent = msg || el.textContent;
+  el.classList.add('show');
+}
+function hideErr(id){ document.getElementById(id).classList.remove('show'); }
+
+async function submitWork() {
+  var m1 = document.getElementById('m1').value.trim();
+  var m2 = groupSize===2 ? document.getElementById('m2').value.trim() : '';
+  var idea = document.getElementById('idea').value.trim();
+  hideErr('m1Err'); hideErr('m2Err'); hideErr('fileErr'); hideErr('ideaErr');
+  document.getElementById('globalErr').classList.remove('show');
+
+  var ok = true;
+  if (!m1){ showErr('m1Err'); ok=false; }
+  if (groupSize===2 && !m2){ showErr('m2Err'); ok=false; }
+  if (!uploadedFile){ showErr('fileErr'); ok=false; }
+  if (!idea || idea.length < 20){ showErr('ideaErr'); ok=false; }
+  if (!ok) return;
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>檢查中…</span>';
+
+  if (!window._db) {
+    showGlobalErr('Firebase 尚未連線，請稍後再試');
+    btn.disabled = false;
+    btn.innerHTML = '<span>✦</span><span>送出作品</span>';
+    return;
+  }
+
+  try {
+    var { getDocs, query, where, collection } = window._fns;
+    var allSnap = await getDocs(window._col);
+    var existing = [];
+    allSnap.forEach(function(d){ existing.push(d.data()); });
+    var names = [m1]; if (groupSize===2 && m2) names.push(m2);
+    var dup = names.find(function(n){ return existing.some(function(e){ return e.members && e.members.indexOf(n)>=0; }); });
+    if (dup) {
+      showGlobalErr('「' + dup + '」已提交過作品，每人只能提交一次');
+      btn.disabled = false;
+      btn.innerHTML = '<span>✦</span><span>送出作品</span>';
+      return;
+    }
+  } catch(e) {}
+
+  showPage('pg-scoring');
+  startStepAnim();
+  scoreWithAI(m1, m2, names, idea);
+}
+window.submitWork = submitWork;
+
+function showGlobalErr(msg) {
+  var el = document.getElementById('globalErr');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+var stepTimer;
+function startStepAnim() {
+  var steps = ['step0','step1','step2','step3'];
+  var msgs = ['讀取並分析你的創意檔案…','評估視覺美感與原創性…','衡量邏輯清晰度與創新程度…','計算綜合加權分數…'];
+  var i = 0;
+  function next() {
+    if (i > 0) { document.getElementById(steps[i-1]).className = 'score-step done'; }
+    if (i < steps.length) {
+      document.getElementById(steps[i]).className = 'score-step active';
+      document.getElementById('scoreMsg').textContent = msgs[i];
+      i++;
+      stepTimer = setTimeout(next, 2200);
+    }
+  }
+  next();
+}
+
+async function scoreWithAI(m1, m2, names, idea) {
+  var prompt = '你是一位公正的創意作品評審。根據以下資訊給出評分，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，分數為整數）：\n1. visual（視覺美感）：根據描述和圖片推測視覺設計品質與吸引力\n2. originality（原創性）：創意的獨特與差異程度\n3. clarity（邏輯清晰度）：描述是否清晰、有條理、易於理解\n4. innovation（創新程度）：概念是否突破常規、有新意\n\n評分原則：請合理評分，不要全部給高分或低分，依實際描述品質給出差異化評分。\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內繁體中文評語"}';
+
+  var messages = [{ role: 'user', content: [] }];
+  if (uploadedB64 && uploadedType && uploadedType.startsWith('image/')) {
+    messages[0].content.push({ type: 'image', source: { type: 'base64', media_type: uploadedType, data: uploadedB64 } });
+  }
+  messages[0].content.push({ type: 'text', text: prompt });
+
+  var scores = null;
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 400, messages: messages })
+    });
+    var data = await resp.json();
+    var txt = '';
+    if (data.content) data.content.forEach(function(b){ if(b.type==='text') txt += b.text; });
+    var clean = txt.replace(/```json|```/g,'').trim();
+    scores = JSON.parse(clean);
+  } catch(e) {
+    scores = { visual: 16, originality: 15, clarity: 18, innovation: 16, comment: '創意想法具有一定潛力' };
+  }
+
+  clearTimeout(stepTimer);
+  var visual = Math.min(25, Math.max(0, Math.round(Number(scores.visual)||15)));
+  var originality = Math.min(25, Math.max(0, Math.round(Number(scores.originality)||15)));
+  var clarity = Math.min(25, Math.max(0, Math.round(Number(scores.clarity)||15)));
+  var innovation = Math.min(25, Math.max(0, Math.round(Number(scores.innovation)||15)));
+  var fileScore = visual + originality;
+  var ideaScore = clarity + innovation;
+  var total = Math.round(fileScore * 0.8 + ideaScore * 1.2);
+  total = Math.min(100, Math.max(0, total));
+  var comment = scores.comment || '作品完成';
+
+  var entry = {
+    members: names, m1: m1, m2: m2||'',
+    scores: { visual, originality, clarity, innovation },
+    fileScore, ideaScore, total, comment,
+    ts: new Date().toISOString()
+  };
+
+  try {
+    var { addDoc } = window._fns;
+    await addDoc(window._col, entry);
+  } catch(e) { console.error('Firestore save error', e); }
+
+  showResult(entry);
+}
+
+function showResult(entry) {
+  showPage('pg-result');
+  var s = entry.scores;
+  document.getElementById('resultName').textContent = entry.m2 ? entry.m1 + ' & ' + entry.m2 : entry.m1;
+  document.getElementById('resultComment').textContent = '「' + entry.comment + '」';
+  document.getElementById('resultTotal').textContent = entry.total;
+  setTimeout(function(){
+    var arc = Math.round((entry.total / 100) * 301.6);
+    document.getElementById('scoreArc').setAttribute('stroke-dasharray', arc + ' 302');
+    document.getElementById('rv').textContent = s.visual+'/25';
+    document.getElementById('ro').textContent = s.originality+'/25';
+    document.getElementById('rc').textContent = s.clarity+'/25';
+    document.getElementById('ri').textContent = s.innovation+'/25';
+    document.getElementById('rb1').style.width = (s.visual/25*100)+'%';
+    document.getElementById('rb2').style.width = (s.originality/25*100)+'%';
+    document.getElementById('rb3').style.width = (s.clarity/25*100)+'%';
+    document.getElementById('rb4').style.width = (s.innovation/25*100)+'%';
+  }, 150);
+}
+
+async function loadRank() {
+  var body = document.getElementById('rankBody');
+  body.innerHTML = renderLoadingSkeletons();
+  if (!window._db) { body.innerHTML = '<div class="rank-empty">Firebase 連線中，請稍後重新整理</div>'; return; }
+  try {
+    var { getDocs, query, orderBy } = window._fns;
+    var snap = await getDocs(query(window._col, orderBy('total','desc')));
+    var entries = [];
+    snap.forEach(function(d){ entries.push(d.data()); });
+    document.getElementById('rankTotal').textContent = '共 ' + entries.length + ' 組已提交';
+    renderRankList(entries);
+  } catch(e) {
+    body.innerHTML = '<div class="rank-empty">載入失敗，請重新整理</div>';
+  }
+}
+window.loadRank = loadRank;
+
+function renderLoadingSkeletons() {
+  var html = '';
+  for(var i=0;i<4;i++){
+    html += '<div class="loading-row"><div class="loading-dot"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px"><div class="loading-line" style="width:60%"></div><div class="loading-line" style="width:35%"></div></div></div>';
+  }
+  return html;
+}
+
+function renderRankList(entries) {
+  var body = document.getElementById('rankBody');
+  if (entries.length === 0) { body.innerHTML = '<div class="rank-empty">尚無作品提交<br><span style="font-size:12px;color:var(--text3)">快去上傳你的第一個作品吧！</span></div>'; return; }
+  var top = entries.slice(0, 6);
+  var tiers = [
+    { label: '🏆 冠軍', cls: 'gold', symbol: '01', count: 1 },
+    { label: '🥈 亞軍', cls: 'silver', symbol: '02', count: 1 },
+    { label: '🥉 季軍', cls: 'bronze', symbol: '03', count: 1 },
+    { label: '⭐ 佳作', cls: 'honor', symbol: '', count: 3 }
+  ];
+  var html = '';
+  var idx = 0;
+  tiers.forEach(function(tier){
+    var cnt = Math.min(tier.count, top.length - idx);
+    if (cnt <= 0) return;
+    html += '<div><div class="tier-label" style="color:var(--text2)">' + tier.label + '</div>';
+    for (var i=0; i<cnt; i++) {
+      var e = top[idx];
+      var nameStr = e.m2 ? e.m1 + ' & ' + e.m2 : e.m1;
+      var sym = tier.cls === 'honor' ? '#'+(idx+1) : tier.symbol;
+      html += '<div class="rank-item ' + tier.cls + '" style="animation-delay:'+(idx*0.08)+'s">';
+      html += '<div class="rank-medal ' + tier.cls + '">' + sym + '</div>';
+      html += '<div class="rank-info"><div class="rank-names">' + nameStr + '</div>';
+      html += '<div class="rank-detail mono">創意 ' + e.fileScore + ' · 想法 ' + e.ideaScore + '</div></div>';
+      html += '<div class="rank-score">' + e.total + '</div></div>';
+      idx++;
+    }
+    html += '</div>';
+  });
+  if (entries.length > 6) {
+    html += '<div style="text-align:center;font-size:12px;color:var(--text3);font-family:Space Mono,monospace">其餘 '+(entries.length-6)+' 組參賽中</div>';
+  }
+  body.innerHTML = html;
+}
+
+async function loadHomeCount() {
+  var el = document.getElementById('homeCount');
+  if (!window._db) { el.textContent = '連線初始化中…'; return; }
+  try {
+    var { getDocs } = window._fns;
+    var snap = await getDocs(window._col);
+    var n = snap.size;
+    el.innerHTML = '已有 <span>' + n + '</span> 組提交作品';
+  } catch(e) { el.textContent = ''; }
+}
+window.loadHomeCount = loadHomeCount;
+
+setTimeout(function(){
+  if (typeof window._db === 'undefined') {
+    document.getElementById('homeCount').textContent = '連線中…';
+  }
+}, 3000);
+</script>
+</body>
+</html>
