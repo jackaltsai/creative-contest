@@ -151,7 +151,7 @@ input[type=file]{display:none}
 .rank-medal.gold{background:rgba(240,192,64,.15);color:var(--gold);border:1px solid rgba(240,192,64,.3)}
 .rank-medal.silver{background:rgba(160,176,192,.1);color:var(--silver);border:1px solid rgba(160,176,192,.2)}
 .rank-medal.bronze{background:rgba(192,128,96,.1);color:var(--bronze);border:1px solid rgba(192,128,96,.2)}
-.rank-medal.honor{background:var(--surface2);color:var(--text3);border:1px solid var(--border);font-size:12px}
+.rank-medal.honor{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);font-size:13px;font-weight:700}
 .rank-info{flex:1;min-width:0}
 .rank-names{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rank-detail{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
@@ -812,18 +812,24 @@ function renderRankList(entries) {
     { label: '🏆 冠軍', cls: 'gold', symbol: '01', count: 1 },
     { label: '🥈 亞軍', cls: 'silver', symbol: '02', count: 1 },
     { label: '🥉 季軍', cls: 'bronze', symbol: '03', count: 1 },
-    { label: '⭐ 佳作', cls: 'honor', symbol: '', count: 3 }
+    { label: '⭐ 佳作', cls: 'honor', symbol: '佳作', count: 3 }
   ];
   var html = '';
   var idx = 0;
   tiers.forEach(function(tier){
     var cnt = Math.min(tier.count, top.length - idx);
     if (cnt <= 0) return;
-    html += '<div><div class="tier-label" style="color:var(--text2)">' + tier.label + '</div>';
+    // 佳作單獨顯示大標題
+    if (tier.cls === 'honor') {
+      html += '<div><div class="tier-label" style="color:var(--text2)">' + tier.label + '（共 ' + cnt + ' 組）</div>';
+    } else {
+      html += '<div><div class="tier-label" style="color:var(--text2)">' + tier.label + '</div>';
+    }
     for (var i=0; i<cnt; i++) {
       var e = top[idx];
       var nameStr = e.m2 ? e.m1 + ' & ' + e.m2 : e.m1;
-      var sym = tier.cls === 'honor' ? '#'+(idx+1) : tier.symbol;
+      // 佳作顯示「佳作」字樣，其他顯示名次
+      var sym = tier.cls === 'honor' ? '佳' : tier.symbol;
       var fb = e.feedback || {};
       var fbKeys = [
         { key: 'visual', label: '視覺美感' },
@@ -884,4 +890,3 @@ setTimeout(function(){
 </script>
 </body>
 </html>
-
