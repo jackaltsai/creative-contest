@@ -686,9 +686,9 @@ async function uploadFile(file, names) {
 }
 
 async function scoreWithAI(m1, m2, names, idea) {
-  // 加入隨機種子讓 AI 給出更有差異的分數
+  // 加入隨機種子讓每次評分有差異
   var seed = Math.floor(Math.random() * 9000) + 1000;
-  var prompt = '你是一位嚴格且細膩的創意作品評審（評審編號：' + seed + '）。根據以下資訊給出評分與反饋，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，請給小數點一位的精確分數）：\n1. visual（視覺美感）：根據圖片或描述推測視覺設計品質、配色、構圖、吸引力\n2. originality（原創性）：創意是否獨特、與眾不同、避免陳腔濫調\n3. clarity（邏輯清晰度）：描述是否清晰、有條理、讓人一看就懂\n4. innovation（創新程度）：概念是否突破常規、有新意、有潛在影響力\n\n【重要評分規則】\n- 每項必須給不同的小數點分數（如 16.2、18.7、14.4、20.1）\n- 四項分數之間至少有 1 分以上的差距\n- 嚴格依描述品質給分：描述模糊、簡短者給 10–15 分；描述清晰有深度者給 18–23 分；卓越者才給 23 分以上\n- 不要每次都給 15–17 分的中間值，請真實反映作品優劣\n- 若有圖片，請仔細觀察圖片內容並反映在 visual 和 originality 分數中\n\n反饋原則：\n- 每個項目各給一句優點（15字內）和一句具體建議（15字內）\n- 語氣鼓勵但客觀，建議要具體可執行\n- 用繁體中文\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內繁體中文總評語","feedback":{"visual":{"pro":"優點","suggest":"建議"},"originality":{"pro":"優點","suggest":"建議"},"clarity":{"pro":"優點","suggest":"建議"},"innovation":{"pro":"優點","suggest":"建議"}}}';
+  var prompt = '你是一位溫暖且鼓勵學生的創意作品評審（評審編號：' + seed + '）。你的評分風格是正向、建設性的，目標是幫助學生建立創作信心。根據以下資訊給出評分與反饋，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，請給小數點一位的精確分數）：\n1. visual（視覺美感）：根據圖片或描述推測視覺設計的吸引力與用心程度\n2. originality（原創性）：創意的獨特性與個人風格\n3. clarity（邏輯清晰度）：描述是否清楚表達想法\n4. innovation（創新程度）：是否有新穎的思維或解決問題的嘗試\n\n【評分原則 — 鼓勵為主】\n- 基礎分為 17 分，只要有認真作答就不低於 15 分\n- 有上傳圖片或描述清楚者給 19–22 分\n- 描述詳細、想法有深度者給 22–25 分\n- 四個項目請給不同的小數點分數（如 18.4、20.1、19.7、21.3）\n- 絕對不要給低於 13 分，學生都很努力\n- 若有圖片，請肯定視覺設計的用心\n\n反饋原則：\n- 每個項目各給一句鼓勵優點（15字內，語氣溫暖積極）和一句正向建議（15字內，用「如果…會更棒」的語氣）\n- 用繁體中文，像老師鼓勵學生一樣溫暖\n- 絕對不要用負面或批評的語氣\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內充滿鼓勵的繁體中文總評語","feedback":{"visual":{"pro":"優點","suggest":"建議"},"originality":{"pro":"優點","suggest":"建議"},"clarity":{"pro":"優點","suggest":"建議"},"innovation":{"pro":"優點","suggest":"建議"}}}';
 
   var messages = [{ role: 'user', content: [] }];
   if (uploadedB64 && uploadedType && uploadedType.startsWith('image/')) {
@@ -709,15 +709,16 @@ async function scoreWithAI(m1, m2, names, idea) {
     var clean = txt.replace(/```json|```/g,'').trim();
     scores = JSON.parse(clean);
   } catch(e) {
-    scores = { visual: 16, originality: 15, clarity: 18, innovation: 16, comment: '創意想法具有一定潛力', feedback: { visual: { pro: '設計有一定美感', suggest: '可加強視覺層次' }, originality: { pro: '有基本創意概念', suggest: '可提升獨特性' }, clarity: { pro: '描述尚算清晰', suggest: '可加強邏輯架構' }, innovation: { pro: '有突破嘗試', suggest: '可深化創新思維' } } };
+    scores = { visual: 19, originality: 18, clarity: 20, innovation: 18, comment: '你的創意讓人眼睛一亮，繼續加油！', feedback: { visual: { pro: '設計用心，視覺很有吸引力', suggest: '如果加上更多配色會更棒' }, originality: { pro: '創意獨特，展現了個人風格', suggest: '如果加入更多細節會更出色' }, clarity: { pro: '想法表達清晰，很容易理解', suggest: '如果再加一個例子會更完整' }, innovation: { pro: '有創新的思維，很有潛力', suggest: '如果說明應用場景會更有說服力' } } };
   }
 
   clearTimeout(stepTimer);
   // 加入微小隨機擾動（±0.1~0.2）確保分數唯一，不影響實質評分
   function jitter(v, base) {
     var n = Math.round(Number(v||base)*10)/10;
-    var offset = Math.round((Math.random()*0.4 - 0.2)*10)/10;
-    return Math.min(25, Math.max(0, Math.round((n+offset)*10)/10));
+    // 輕微正向偏移（0 ~ +0.3），鼓勵學生信心
+    var offset = Math.round((Math.random()*0.3)*10)/10;
+    return Math.min(25, Math.max(13, Math.round((n+offset)*10)/10));
   }
   var visual = jitter(scores.visual, 15);
   var originality = jitter(scores.originality, 15);
