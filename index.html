@@ -269,7 +269,7 @@ input[type=file]{display:none}
   </div>
   <div class="result-body">
     <div class="score-breakdown">
-      <div class="breakdown-title">創意檔案 ×40%</div>
+      <div class="breakdown-title">創意檔案 ×50%</div>
       <div class="score-row">
         <div class="score-row-top"><span>視覺美感</span><span id="rv">—/25</span></div>
         <div class="bar-track"><div class="bar-fill" id="rb1" style="background:#60a8f0"></div></div>
@@ -280,7 +280,7 @@ input[type=file]{display:none}
       </div>
     </div>
     <div class="score-breakdown">
-      <div class="breakdown-title">創意想法 ×60%</div>
+      <div class="breakdown-title">創意想法 ×50%</div>
       <div class="score-row">
         <div class="score-row-top"><span>邏輯清晰度</span><span id="rc">—/25</span></div>
         <div class="bar-track"><div class="bar-fill" id="rb3" style="background:#f060a8"></div></div>
@@ -495,9 +495,25 @@ async function scoreWithAI(m1, m2, names, idea) {
   var innovation = Math.min(25, Math.max(0, Math.round(Number(scores.innovation)||15)));
   var fileScore = visual + originality;
   var ideaScore = clarity + innovation;
-  var total = Math.round(fileScore * 0.8 + ideaScore * 1.2);
+  // 50% / 50% 加權
+  var total = Math.round(fileScore * 1.0 + ideaScore * 1.0);
   total = Math.min(100, Math.max(0, total));
   var comment = scores.comment || '作品完成';
+
+  // 確保分數不與已有分數重複，衝突時 +1 直到唯一（上限100）
+  try {
+    var { getDocs: gd2, query: q2, orderBy: ob2 } = window._fns;
+    var existSnap = await gd2(window._col);
+    var existTotals = new Set();
+    existSnap.forEach(function(d){ existTotals.add(d.data().total); });
+    var orig = total;
+    var tries = 0;
+    while (existTotals.has(total) && tries < 20) {
+      total = total < 100 ? total + 1 : total - 1 - tries;
+      tries++;
+    }
+    total = Math.min(100, Math.max(1, total));
+  } catch(e) {}
 
   var entry = {
     members: names, m1: m1, m2: m2||'',
