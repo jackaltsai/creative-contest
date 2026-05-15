@@ -170,6 +170,8 @@ input[type=file]{display:none}
 .fb-pro{font-size:12px;color:var(--success);line-height:1.4}
 .fb-suggest{font-size:12px;color:var(--blue);line-height:1.4}
 .fb-overall{font-size:12px;color:var(--text2);border-top:1px solid var(--border);padding-top:8px;line-height:1.5}
+.view-work-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;text-decoration:none;font-family:'Space Mono',monospace;transition:all .2s;margin-top:2px}
+.view-work-btn:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -250,7 +252,7 @@ input[type=file]{display:none}
     <div class="score-title">AI 評分中</div>
     <div class="score-msg" id="scoreMsg">準備分析作品…</div>
     <div class="score-steps">
-      <div class="score-step active" id="step0"><div class="step-dot"></div><span>讀取創意檔案</span></div>
+      <div class="score-step active" id="step0"><div class="step-dot"></div><span>上傳創意檔案</span></div>
       <div class="score-step" id="step1"><div class="step-dot"></div><span>分析視覺美感與原創性</span></div>
       <div class="score-step" id="step2"><div class="step-dot"></div><span>評估想法邏輯與創新程度</span></div>
       <div class="score-step" id="step3"><div class="step-dot"></div><span>計算綜合分數</span></div>
@@ -323,6 +325,7 @@ input[type=file]{display:none}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJ7VhReIPSCQdGuRJvZvV5w5-CAVkZt6w",
@@ -335,9 +338,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 window._db = db;
+window._storage = storage;
 window._col = collection(db, 'entries');
-window._fns = { collection, addDoc, getDocs, query, orderBy, where };
+window._fns = { collection, addDoc, getDocs, query, orderBy, where, ref, uploadBytes, getDownloadURL };
 
 loadHomeCount();
 </script>
@@ -456,7 +461,7 @@ function showGlobalErr(msg) {
 var stepTimer;
 function startStepAnim() {
   var steps = ['step0','step1','step2','step3'];
-  var msgs = ['讀取並分析你的創意檔案…','評估視覺美感與原創性…','衡量邏輯清晰度與創新程度…','計算綜合加權分數…'];
+  var msgs = ['上傳創意檔案中…','評估視覺美感與原創性…','衡量邏輯清晰度與創新程度…','計算綜合加權分數…'];
   var i = 0;
   function next() {
     if (i > 0) { document.getElementById(steps[i-1]).className = 'score-step done'; }
@@ -468,6 +473,23 @@ function startStepAnim() {
     }
   }
   next();
+}
+
+async function uploadFile(file, names) {
+  if (!file || !window._storage) return null;
+  try {
+    var { ref: sRef, uploadBytes: upload, getDownloadURL: getURL } = window._fns;
+    var ts = Date.now();
+    var safeName = names.join('_').replace(/[^a-zA-Z0-9一-龥_]/g, '') + '_' + ts;
+    var ext = file.name.split('.').pop();
+    var fileRef = sRef(window._storage, 'works/' + safeName + '.' + ext);
+    var snapshot = await upload(fileRef, file);
+    var url = await getURL(snapshot.ref);
+    return url;
+  } catch(e) {
+    console.error('Upload error', e);
+    return null;
+  }
 }
 
 async function scoreWithAI(m1, m2, names, idea) {
@@ -514,10 +536,17 @@ async function scoreWithAI(m1, m2, names, idea) {
     clarity: { pro: '描述尚算清晰', suggest: '可加強邏輯架構' },
     innovation: { pro: '有突破嘗試', suggest: '可深化創新思維' }
   };
+
+  // 上傳檔案到 Firebase Storage
+  var fileUrl = await uploadFile(uploadedFile, names);
+  var fileName = uploadedFile ? uploadedFile.name : '';
+  var fileType = uploadedFile ? uploadedFile.type : '';
+
   var entry = {
     members: names, m1: m1, m2: m2||'',
     scores: { visual, originality, clarity, innovation },
     fileScore, ideaScore, total, comment, feedback,
+    fileUrl: fileUrl || '', fileName: fileName, fileType: fileType,
     ts: new Date().toISOString()
   };
 
@@ -619,6 +648,10 @@ function renderRankList(entries) {
       });
       html += '</div>';
       if (e.comment) html += '<div class="fb-overall">💬 ' + e.comment + '</div>';
+      if (e.fileUrl) {
+        var isImg = e.fileType && e.fileType.startsWith('image/');
+        html += '<a href="' + e.fileUrl + '" target="_blank" class="view-work-btn">' + (isImg ? '🖼️' : '📄') + ' 查看作品檔案</a>';
+      }
       html += '</div>';
       idx++;
     }
