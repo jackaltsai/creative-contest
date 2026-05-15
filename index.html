@@ -474,7 +474,7 @@ async function scoreWithAI(m1, m2, names, idea) {
 
   var scores = null;
   try {
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+    var resp = await fetch('https://creative.hata-s520.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 400, messages: messages })
