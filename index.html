@@ -173,6 +173,43 @@ input[type=file]{display:none}
 .fb-overall{font-size:12px;color:var(--text2);border-top:1px solid var(--border);padding-top:8px;line-height:1.5}
 .view-work-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;text-decoration:none;font-family:'Space Mono',monospace;transition:all .2s;margin-top:2px}
 .view-work-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Guide page */
+#pg-guide{background:#f7f8fa}
+.guide-topbar{display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;background:#fff;border-bottom:1px solid #e8eaed;position:sticky;top:0;z-index:10}
+.guide-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid #e8eaed;background:#f7f8fa;cursor:pointer;color:#666;font-size:18px;flex-shrink:0}
+.guide-page-title{font-size:16px;font-weight:700;color:#1a1a1a;flex:1}
+.guide-body{padding:1.25rem;display:flex;flex-direction:column;gap:1rem;padding-bottom:3rem}
+.guide-hero{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px;padding:1.75rem 1.25rem;text-align:center;color:#fff}
+.guide-hero-badge{display:inline-block;background:rgba(255,255,255,.2);border-radius:100px;padding:4px 14px;font-size:11px;font-weight:700;letter-spacing:.08em;margin-bottom:.75rem;font-family:'Space Mono',monospace}
+.guide-hero h2{font-size:22px;font-weight:700;margin-bottom:.5rem;line-height:1.3}
+.guide-hero p{font-size:13px;opacity:.85;line-height:1.6}
+.guide-total{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.guide-total-card{border-radius:12px;padding:1rem;text-align:center}
+.guide-total-card.file{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff}
+.guide-total-card.idea{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#fff}
+.guide-total-num{font-size:32px;font-weight:700;font-family:'Space Mono',monospace;line-height:1}
+.guide-total-label{font-size:12px;margin-top:4px;opacity:.9;font-weight:500}
+.guide-section-title{font-size:13px;font-weight:700;color:#666;letter-spacing:.08em;text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:.5rem}
+.guide-criterion{background:#fff;border-radius:14px;padding:1.1rem 1.25rem;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:12px;align-items:flex-start}
+.guide-criterion-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.guide-criterion-body{flex:1}
+.guide-criterion-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.guide-criterion-name{font-size:15px;font-weight:700;color:#1a1a1a}
+.guide-criterion-score{font-size:13px;font-weight:700;font-family:'Space Mono',monospace;color:#fff;padding:2px 10px;border-radius:100px}
+.guide-criterion-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:8px}
+.guide-tips{display:flex;flex-direction:column;gap:5px}
+.guide-tip{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:#444;line-height:1.5}
+.guide-tip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.guide-divider{height:1px;background:#e8eaed;margin:.25rem 0}
+.guide-key{background:linear-gradient(135deg,#f6d365,#fda085);border-radius:14px;padding:1.25rem;color:#7a3200}
+.guide-key h3{font-size:15px;font-weight:700;margin-bottom:.75rem;display:flex;align-items:center;gap:8px}
+.guide-key-list{display:flex;flex-direction:column;gap:8px}
+.guide-key-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5}
+.guide-key-num{width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.guide-cta{background:#1a1a1a;border-radius:14px;padding:1.25rem;text-align:center;color:#fff}
+.guide-cta p{font-size:13px;color:#aaa;margin-bottom:.75rem}
+.guide-cta-btn{display:inline-block;background:var(--accent);color:#0d0d0d;font-size:14px;font-weight:700;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
 </style>
 </head>
 <body>
@@ -187,6 +224,7 @@ input[type=file]{display:none}
     <div class="home-btns">
       <button class="btn-main btn-accent" onclick="showPage('pg-submit')">✦ 填寫資料 &amp; 上傳作品</button>
       <button class="btn-main btn-outline" onclick="showPage('pg-rank')">◈ 查看即時排行榜</button>
+      <button class="btn-main btn-outline" onclick="showPage('pg-guide')" style="border-color:#667eea;color:#667eea">📋 評分說明 &amp; 拿高分攻略</button>
     </div>
     <div class="home-stat mono" id="homeCount">讀取中…</div>
   </div>
@@ -319,6 +357,127 @@ input[type=file]{display:none}
   </div>
   <div class="rank-body" id="rankBody">
     <div class="rank-empty">載入中…</div>
+  </div>
+</div>
+
+<!-- GUIDE -->
+<div id="pg-guide" class="page">
+  <div class="guide-topbar">
+    <div class="guide-back" onclick="showPage('pg-home')">←</div>
+    <div class="guide-page-title">評分說明 &amp; 拿高分攻略</div>
+  </div>
+  <div class="guide-body">
+
+    <div class="guide-hero">
+      <div class="guide-hero-badge">AI 評分系統</div>
+      <h2>了解評分規則<br>搶先拿到高分！</h2>
+      <p>AI 會從四個面向評估你的作品<br>總分 100 分，競逐冠軍、亞軍、季軍、佳作</p>
+    </div>
+
+    <div>
+      <div class="guide-section-title">分數比重</div>
+      <div class="guide-total">
+        <div class="guide-total-card file">
+          <div class="guide-total-num">50%</div>
+          <div class="guide-total-label">🖼️ 創意檔案<br>視覺美感 + 原創性</div>
+        </div>
+        <div class="guide-total-card idea">
+          <div class="guide-total-num">50%</div>
+          <div class="guide-total-label">💡 創意想法<br>邏輯清晰 + 創新程度</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="guide-section-title">四大評分項目</div>
+
+      <div style="display:flex;flex-direction:column;gap:.75rem">
+
+        <div class="guide-criterion">
+          <div class="guide-criterion-icon" style="background:#fff0f6">🎨</div>
+          <div class="guide-criterion-body">
+            <div class="guide-criterion-top">
+              <div class="guide-criterion-name">視覺美感</div>
+              <div class="guide-criterion-score" style="background:#f5576c">滿分 25</div>
+            </div>
+            <div class="guide-criterion-desc">AI 會看你上傳的圖片，判斷視覺設計的吸引力、配色與構圖。</div>
+            <div class="guide-tips">
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#f5576c"></div>圖片清晰、構圖完整，不要模糊或歪斜</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#f5576c"></div>有配色設計比隨手拍照得分高</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#f5576c"></div>手繪也可以，乾淨整齊最重要</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-criterion">
+          <div class="guide-criterion-icon" style="background:#fff7e6">✨</div>
+          <div class="guide-criterion-body">
+            <div class="guide-criterion-top">
+              <div class="guide-criterion-name">原創性</div>
+              <div class="guide-criterion-score" style="background:#fda085">滿分 25</div>
+            </div>
+            <div class="guide-criterion-desc">創意是否獨特、有別於一般常見想法，避免陳腔濫調。</div>
+            <div class="guide-tips">
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#fda085"></div>避免太常見的題材（如「環保愛地球」）</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#fda085"></div>結合兩個不相關的概念往往很有創意</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#fda085"></div>說明為什麼你的想法與眾不同</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-criterion">
+          <div class="guide-criterion-icon" style="background:#e8f4ff">📝</div>
+          <div class="guide-criterion-body">
+            <div class="guide-criterion-top">
+              <div class="guide-criterion-name">邏輯清晰度</div>
+              <div class="guide-criterion-score" style="background:#4facfe">滿分 25</div>
+            </div>
+            <div class="guide-criterion-desc">想法描述是否清楚、有條理，讓人一看就懂你在說什麼。</div>
+            <div class="guide-tips">
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#4facfe"></div>描述至少寫 50 字，越詳細越好</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#4facfe"></div>說清楚：是什麼 → 為什麼 → 怎麼做</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#4facfe"></div>有具體例子比空泛描述得分高</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-criterion">
+          <div class="guide-criterion-icon" style="background:#f0fff4">🚀</div>
+          <div class="guide-criterion-body">
+            <div class="guide-criterion-top">
+              <div class="guide-criterion-name">創新程度</div>
+              <div class="guide-criterion-score" style="background:#38ef7d;color:#0a4a1a">滿分 25</div>
+            </div>
+            <div class="guide-criterion-desc">概念是否突破常規，有潛在影響力或解決真實問題的能力。</div>
+            <div class="guide-tips">
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#38ef7d"></div>說明這個想法能解決什麼問題</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#38ef7d"></div>有實際應用場景比純概念得分高</div>
+              <div class="guide-tip"><div class="guide-tip-dot" style="background:#38ef7d"></div>說明對誰有幫助、影響範圍多大</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <div class="guide-key">
+      <h3>🔑 拿高分的關鍵秘訣</h3>
+      <div class="guide-key-list">
+        <div class="guide-key-item"><div class="guide-key-num">1</div>想法描述寫越多越好，AI 能判斷的資訊越多分數越高</div>
+        <div class="guide-key-item"><div class="guide-key-num">2</div>上傳圖片比 PDF 更有利，AI 可以直接看到視覺設計</div>
+        <div class="guide-key-item"><div class="guide-key-num">3</div>描述中要說「為什麼這個想法很特別」</div>
+        <div class="guide-key-item"><div class="guide-key-num">4</div>圖片要清晰乾淨，不要用模糊的照片</div>
+        <div class="guide-key-item"><div class="guide-key-num">5</div>說明你的作品能解決什麼真實生活中的問題</div>
+      </div>
+    </div>
+
+    <div class="guide-cta">
+      <p>準備好了嗎？現在就去上傳你的作品！</p>
+      <button class="guide-cta-btn" onclick="showPage('pg-submit')">✦ 開始上傳作品</button>
+    </div>
+
   </div>
 </div>
 
