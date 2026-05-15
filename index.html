@@ -163,6 +163,13 @@ input[type=file]{display:none}
 .loading-line{height:12px;border-radius:6px;background:var(--border);animation:pulse 1.2s ease infinite}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
 .already-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(96,200,128,.1);border:1px solid rgba(96,200,128,.2);color:var(--success);font-size:12px;padding:4px 12px;border-radius:100px;margin-top:.5rem;font-family:'Space Mono',monospace}
+.fb-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fb-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.fb-label{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
+.fb-score{color:var(--accent);font-size:11px}
+.fb-pro{font-size:12px;color:var(--success);line-height:1.4}
+.fb-suggest{font-size:12px;color:var(--blue);line-height:1.4}
+.fb-overall{font-size:12px;color:var(--text2);border-top:1px solid var(--border);padding-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -464,7 +471,7 @@ function startStepAnim() {
 }
 
 async function scoreWithAI(m1, m2, names, idea) {
-  var prompt = '你是一位公正的創意作品評審。根據以下資訊給出評分，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，分數為整數）：\n1. visual（視覺美感）：根據描述和圖片推測視覺設計品質與吸引力\n2. originality（原創性）：創意的獨特與差異程度\n3. clarity（邏輯清晰度）：描述是否清晰、有條理、易於理解\n4. innovation（創新程度）：概念是否突破常規、有新意\n\n評分原則：請合理評分，不要全部給高分或低分，依實際描述品質給出差異化評分。\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內繁體中文評語"}';
+  var prompt = '你是一位公正的創意作品評審。根據以下資訊給出評分與反饋，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，請給小數點一位的精確分數，例如 18.3、21.7）：\n1. visual（視覺美感）：根據描述和圖片推測視覺設計品質與吸引力\n2. originality（原創性）：創意的獨特與差異程度\n3. clarity（邏輯清晰度）：描述是否清晰、有條理、易於理解\n4. innovation（創新程度）：概念是否突破常規、有新意\n\n評分原則：\n- 每項請給小數點一位（如 17.4、22.1），反映細微差異，讓每組分數都不同\n- 四個項目分數應各有差異\n- 中等品質約 13–17 分，優秀約 18–22 分，傑出約 23–25 分\n- 依作品實際品質客觀評分\n\n反饋原則：\n- 每個評分項目各給一句優點（15字內）和一句建議（15字內）\n- 用繁體中文，語氣鼓勵但客觀\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內繁體中文總評語","feedback":{"visual":{"pro":"優點","suggest":"建議"},"originality":{"pro":"優點","suggest":"建議"},"clarity":{"pro":"優點","suggest":"建議"},"innovation":{"pro":"優點","suggest":"建議"}}}';
 
   var messages = [{ role: 'user', content: [] }];
   if (uploadedB64 && uploadedType && uploadedType.startsWith('image/')) {
@@ -477,7 +484,7 @@ async function scoreWithAI(m1, m2, names, idea) {
     var resp = await fetch('https://creative.hata-s520.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 400, messages: messages })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, messages: messages })
     });
     var data = await resp.json();
     var txt = '';
@@ -485,40 +492,32 @@ async function scoreWithAI(m1, m2, names, idea) {
     var clean = txt.replace(/```json|```/g,'').trim();
     scores = JSON.parse(clean);
   } catch(e) {
-    scores = { visual: 16, originality: 15, clarity: 18, innovation: 16, comment: '創意想法具有一定潛力' };
+    scores = { visual: 16, originality: 15, clarity: 18, innovation: 16, comment: '創意想法具有一定潛力', feedback: { visual: { pro: '設計有一定美感', suggest: '可加強視覺層次' }, originality: { pro: '有基本創意概念', suggest: '可提升獨特性' }, clarity: { pro: '描述尚算清晰', suggest: '可加強邏輯架構' }, innovation: { pro: '有突破嘗試', suggest: '可深化創新思維' } } };
   }
 
   clearTimeout(stepTimer);
-  var visual = Math.min(25, Math.max(0, Math.round(Number(scores.visual)||15)));
-  var originality = Math.min(25, Math.max(0, Math.round(Number(scores.originality)||15)));
-  var clarity = Math.min(25, Math.max(0, Math.round(Number(scores.clarity)||15)));
-  var innovation = Math.min(25, Math.max(0, Math.round(Number(scores.innovation)||15)));
-  var fileScore = visual + originality;
-  var ideaScore = clarity + innovation;
-  // 50% / 50% 加權
-  var total = Math.round(fileScore * 1.0 + ideaScore * 1.0);
+  // 保留小數點一位，讓每組分數自然不同
+  var visual = Math.min(25, Math.max(0, Math.round(Number(scores.visual||15)*10)/10));
+  var originality = Math.min(25, Math.max(0, Math.round(Number(scores.originality||15)*10)/10));
+  var clarity = Math.min(25, Math.max(0, Math.round(Number(scores.clarity||15)*10)/10));
+  var innovation = Math.min(25, Math.max(0, Math.round(Number(scores.innovation||15)*10)/10));
+  var fileScore = Math.round((visual + originality)*10)/10;
+  var ideaScore = Math.round((clarity + innovation)*10)/10;
+  // 50% / 50% 加權，保留小數點一位
+  var total = Math.round((fileScore + ideaScore)*10)/10;
   total = Math.min(100, Math.max(0, total));
   var comment = scores.comment || '作品完成';
 
-  // 確保分數不與已有分數重複，衝突時 +1 直到唯一（上限100）
-  try {
-    var { getDocs: gd2, query: q2, orderBy: ob2 } = window._fns;
-    var existSnap = await gd2(window._col);
-    var existTotals = new Set();
-    existSnap.forEach(function(d){ existTotals.add(d.data().total); });
-    var orig = total;
-    var tries = 0;
-    while (existTotals.has(total) && tries < 20) {
-      total = total < 100 ? total + 1 : total - 1 - tries;
-      tries++;
-    }
-    total = Math.min(100, Math.max(1, total));
-  } catch(e) {}
-
+  var feedback = scores.feedback || {
+    visual: { pro: '設計有一定美感', suggest: '可加強視覺層次' },
+    originality: { pro: '有基本創意概念', suggest: '可提升獨特性' },
+    clarity: { pro: '描述尚算清晰', suggest: '可加強邏輯架構' },
+    innovation: { pro: '有突破嘗試', suggest: '可深化創新思維' }
+  };
   var entry = {
     members: names, m1: m1, m2: m2||'',
     scores: { visual, originality, clarity, innovation },
-    fileScore, ideaScore, total, comment,
+    fileScore, ideaScore, total, comment, feedback,
     ts: new Date().toISOString()
   };
 
@@ -535,14 +534,14 @@ function showResult(entry) {
   var s = entry.scores;
   document.getElementById('resultName').textContent = entry.m2 ? entry.m1 + ' & ' + entry.m2 : entry.m1;
   document.getElementById('resultComment').textContent = '「' + entry.comment + '」';
-  document.getElementById('resultTotal').textContent = entry.total;
+  document.getElementById('resultTotal').textContent = Number(entry.total).toFixed(1);
   setTimeout(function(){
-    var arc = Math.round((entry.total / 100) * 301.6);
+    var arc = Math.round((Number(entry.total) / 100) * 301.6);
     document.getElementById('scoreArc').setAttribute('stroke-dasharray', arc + ' 302');
-    document.getElementById('rv').textContent = s.visual+'/25';
-    document.getElementById('ro').textContent = s.originality+'/25';
-    document.getElementById('rc').textContent = s.clarity+'/25';
-    document.getElementById('ri').textContent = s.innovation+'/25';
+    document.getElementById('rv').textContent = Number(s.visual).toFixed(1)+'/25';
+    document.getElementById('ro').textContent = Number(s.originality).toFixed(1)+'/25';
+    document.getElementById('rc').textContent = Number(s.clarity).toFixed(1)+'/25';
+    document.getElementById('ri').textContent = Number(s.innovation).toFixed(1)+'/25';
     document.getElementById('rb1').style.width = (s.visual/25*100)+'%';
     document.getElementById('rb2').style.width = (s.originality/25*100)+'%';
     document.getElementById('rb3').style.width = (s.clarity/25*100)+'%';
@@ -595,11 +594,32 @@ function renderRankList(entries) {
       var e = top[idx];
       var nameStr = e.m2 ? e.m1 + ' & ' + e.m2 : e.m1;
       var sym = tier.cls === 'honor' ? '#'+(idx+1) : tier.symbol;
-      html += '<div class="rank-item ' + tier.cls + '" style="animation-delay:'+(idx*0.08)+'s">';
+      var fb = e.feedback || {};
+      var fbKeys = [
+        { key: 'visual', label: '視覺美感' },
+        { key: 'originality', label: '原創性' },
+        { key: 'clarity', label: '邏輯清晰度' },
+        { key: 'innovation', label: '創新程度' }
+      ];
+      html += '<div class="rank-item rank-item-full ' + tier.cls + '" style="animation-delay:'+(idx*0.08)+'s;flex-direction:column;align-items:stretch;gap:10px">';
+      html += '<div style="display:flex;align-items:center;gap:12px">';
       html += '<div class="rank-medal ' + tier.cls + '">' + sym + '</div>';
       html += '<div class="rank-info"><div class="rank-names">' + nameStr + '</div>';
-      html += '<div class="rank-detail mono">創意 ' + e.fileScore + ' · 想法 ' + e.ideaScore + '</div></div>';
-      html += '<div class="rank-score">' + e.total + '</div></div>';
+      html += '<div class="rank-detail mono">創意 ' + Number(e.fileScore).toFixed(1) + ' · 想法 ' + Number(e.ideaScore).toFixed(1) + '</div></div>';
+      html += '<div class="rank-score">' + Number(e.total).toFixed(1) + '</div></div>';
+      html += '<div class="fb-grid">';
+      fbKeys.forEach(function(item) {
+        var f = fb[item.key] || {};
+        var score = e.scores ? Number(e.scores[item.key]).toFixed(1) : '—';
+        html += '<div class="fb-card">';
+        html += '<div class="fb-label">' + item.label + ' <span class="fb-score mono">' + score + '/25</span></div>';
+        if (f.pro) html += '<div class="fb-pro">✦ ' + f.pro + '</div>';
+        if (f.suggest) html += '<div class="fb-suggest">↗ ' + f.suggest + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      if (e.comment) html += '<div class="fb-overall">💬 ' + e.comment + '</div>';
+      html += '</div>';
       idx++;
     }
     html += '</div>';
