@@ -6,6 +6,7 @@
 <title>創意作品評分系統</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root {
   --bg: #0d0d0d;
@@ -376,7 +377,7 @@ function updateCount() {
 }
 window.updateCount = updateCount;
 
-function handleFile(input) {
+async function handleFile(input) {
   var f = input.files[0];
   if (!f) return;
   var zone = document.getElementById('uploadZone');
@@ -388,14 +389,47 @@ function handleFile(input) {
     return;
   }
   uploadedFile = f;
-  uploadedType = f.type;
   zone.classList.add('done');
-  document.getElementById('uploadIcon').textContent = f.type.startsWith('image/') ? '🖼️' : '📄';
   document.getElementById('uploadText').innerHTML = '<b>' + f.name + '</b>';
   document.getElementById('uploadHint').textContent = (f.size/1024/1024).toFixed(2) + ' MB';
-  var reader = new FileReader();
-  reader.onload = function(e){ uploadedB64 = e.target.result.split(',')[1]; };
-  reader.readAsDataURL(f);
+
+  if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
+    // PDF → 轉換第一頁為圖片
+    document.getElementById('uploadIcon').textContent = '⏳';
+    document.getElementById('uploadHint').textContent = 'PDF 轉換中，請稍候…';
+    try {
+      var arrayBuffer = await f.arrayBuffer();
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      var page = await pdf.getPage(1);
+      var viewport = page.getViewport({ scale: 2.0 });
+      var canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      var ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      uploadedB64 = dataUrl.split(',')[1];
+      uploadedType = 'image/jpeg';
+      document.getElementById('uploadIcon').textContent = '📄';
+      document.getElementById('uploadHint').textContent = '✓ PDF 已轉換為圖片（第1頁）· ' + (f.size/1024/1024).toFixed(2) + ' MB';
+    } catch(e) {
+      // fallback: read as binary
+      document.getElementById('uploadIcon').textContent = '📄';
+      document.getElementById('uploadHint').textContent = '⚠ 轉換失敗，將以文字描述為主評分';
+      uploadedType = f.type;
+      var reader2 = new FileReader();
+      reader2.onload = function(e2){ uploadedB64 = e2.target.result.split(',')[1]; };
+      reader2.readAsDataURL(f);
+    }
+  } else {
+    // 圖片直接讀取
+    uploadedType = f.type;
+    document.getElementById('uploadIcon').textContent = '🖼️';
+    var reader = new FileReader();
+    reader.onload = function(e){ uploadedB64 = e.target.result.split(',')[1]; };
+    reader.readAsDataURL(f);
+  }
 }
 window.handleFile = handleFile;
 
@@ -493,7 +527,9 @@ async function uploadFile(file, names) {
 }
 
 async function scoreWithAI(m1, m2, names, idea) {
-  var prompt = '你是一位公正的創意作品評審。根據以下資訊給出評分與反饋，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，請給小數點一位的精確分數，例如 18.3、21.7）：\n1. visual（視覺美感）：根據描述和圖片推測視覺設計品質與吸引力\n2. originality（原創性）：創意的獨特與差異程度\n3. clarity（邏輯清晰度）：描述是否清晰、有條理、易於理解\n4. innovation（創新程度）：概念是否突破常規、有新意\n\n評分原則：\n- 每項請給小數點一位（如 17.4、22.1），反映細微差異，讓每組分數都不同\n- 四個項目分數應各有差異\n- 中等品質約 13–17 分，優秀約 18–22 分，傑出約 23–25 分\n- 依作品實際品質客觀評分\n\n反饋原則：\n- 每個評分項目各給一句優點（15字內）和一句建議（15字內）\n- 用繁體中文，語氣鼓勵但客觀\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內繁體中文總評語","feedback":{"visual":{"pro":"優點","suggest":"建議"},"originality":{"pro":"優點","suggest":"建議"},"clarity":{"pro":"優點","suggest":"建議"},"innovation":{"pro":"優點","suggest":"建議"}}}';
+  // 加入隨機種子讓 AI 給出更有差異的分數
+  var seed = Math.floor(Math.random() * 9000) + 1000;
+  var prompt = '你是一位嚴格且細膩的創意作品評審（評審編號：' + seed + '）。根據以下資訊給出評分與反饋，只回傳 JSON，不要任何其他文字或 markdown。\n\n作品想法描述：\n' + idea + '\n\n評分項目（每項滿分 25 分，請給小數點一位的精確分數）：\n1. visual（視覺美感）：根據圖片或描述推測視覺設計品質、配色、構圖、吸引力\n2. originality（原創性）：創意是否獨特、與眾不同、避免陳腔濫調\n3. clarity（邏輯清晰度）：描述是否清晰、有條理、讓人一看就懂\n4. innovation（創新程度）：概念是否突破常規、有新意、有潛在影響力\n\n【重要評分規則】\n- 每項必須給不同的小數點分數（如 16.2、18.7、14.4、20.1）\n- 四項分數之間至少有 1 分以上的差距\n- 嚴格依描述品質給分：描述模糊、簡短者給 10–15 分；描述清晰有深度者給 18–23 分；卓越者才給 23 分以上\n- 不要每次都給 15–17 分的中間值，請真實反映作品優劣\n- 若有圖片，請仔細觀察圖片內容並反映在 visual 和 originality 分數中\n\n反饋原則：\n- 每個項目各給一句優點（15字內）和一句具體建議（15字內）\n- 語氣鼓勵但客觀，建議要具體可執行\n- 用繁體中文\n\n回傳格式：{"visual":數字,"originality":數字,"clarity":數字,"innovation":數字,"comment":"一句20字內繁體中文總評語","feedback":{"visual":{"pro":"優點","suggest":"建議"},"originality":{"pro":"優點","suggest":"建議"},"clarity":{"pro":"優點","suggest":"建議"},"innovation":{"pro":"優點","suggest":"建議"}}}';
 
   var messages = [{ role: 'user', content: [] }];
   if (uploadedB64 && uploadedType && uploadedType.startsWith('image/')) {
@@ -518,11 +554,16 @@ async function scoreWithAI(m1, m2, names, idea) {
   }
 
   clearTimeout(stepTimer);
-  // 保留小數點一位，讓每組分數自然不同
-  var visual = Math.min(25, Math.max(0, Math.round(Number(scores.visual||15)*10)/10));
-  var originality = Math.min(25, Math.max(0, Math.round(Number(scores.originality||15)*10)/10));
-  var clarity = Math.min(25, Math.max(0, Math.round(Number(scores.clarity||15)*10)/10));
-  var innovation = Math.min(25, Math.max(0, Math.round(Number(scores.innovation||15)*10)/10));
+  // 加入微小隨機擾動（±0.1~0.2）確保分數唯一，不影響實質評分
+  function jitter(v, base) {
+    var n = Math.round(Number(v||base)*10)/10;
+    var offset = Math.round((Math.random()*0.4 - 0.2)*10)/10;
+    return Math.min(25, Math.max(0, Math.round((n+offset)*10)/10));
+  }
+  var visual = jitter(scores.visual, 15);
+  var originality = jitter(scores.originality, 15);
+  var clarity = jitter(scores.clarity, 15);
+  var innovation = jitter(scores.innovation, 15);
   var fileScore = Math.round((visual + originality)*10)/10;
   var ideaScore = Math.round((clarity + innovation)*10)/10;
   // 50% / 50% 加權，保留小數點一位
