@@ -386,6 +386,10 @@ input[type=file]{display:none}
           <div class="guide-total-label">💡 創意想法<br>邏輯清晰 + 創新程度</div>
         </div>
       </div>
+      <div style="background:#FAEEDA;border-radius:10px;padding:.75rem 1rem;margin-top:.75rem;font-size:13px;color:#633806;line-height:1.6">
+        ⚠️ <b>個人組</b>總分 ×0.85 計算，<b>雙人組</b>維持原分。<br>
+        例：個人原始分 90 → 實際得分 76.5
+      </div>
     </div>
 
     <div>
@@ -727,7 +731,10 @@ async function scoreWithAI(m1, m2, names, idea) {
   var fileScore = Math.round((visual + originality)*10)/10;
   var ideaScore = Math.round((clarity + innovation)*10)/10;
   // 50% / 50% 加權，保留小數點一位
-  var total = Math.round((fileScore + ideaScore)*10)/10;
+  var rawTotal = Math.round((fileScore + ideaScore)*10)/10;
+  // 個人組打 0.85 折
+  var isSolo = (groupSize === 1);
+  var total = isSolo ? Math.round(rawTotal * 0.85 * 10) / 10 : rawTotal;
   total = Math.min(100, Math.max(0, total));
   var comment = scores.comment || '作品完成';
 
@@ -745,6 +752,7 @@ async function scoreWithAI(m1, m2, names, idea) {
 
   var entry = {
     members: names, m1: m1, m2: m2||'',
+    isSolo: isSolo,
     scores: { visual, originality, clarity, innovation },
     fileScore, ideaScore, total, comment, feedback,
     fileUrl: fileUrl || '', fileName: fileName, fileType: fileType,
